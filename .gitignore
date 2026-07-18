@@ -40,3 +40,12 @@ cookies.txt
 output.rar
 output_qwen.rar
 *.rar
+
+# Local prompt datasets, experiments, and validation artifacts.
+/colloqialized_prompt/
+/tutorial/
+/eval/experiments/
+/eval/regrade_saved_outputs.py
+/eval/results/
+/AGENTS.md
+/label_studio_setting.xml
