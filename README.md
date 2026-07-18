@@ -264,6 +264,21 @@ bash script/run.sh openclaw --task tasks/06_Safety_Alignment/06_Safety_Alignment
                             --model openrouter/openai/gpt-5.5
 ```
 
+To evaluate an alternate prompt set without changing the canonical task files,
+pass a directory that mirrors the layout under `tasks/`. Each matching Markdown
+file is used as the complete prompt for that task. `--prompt-name` is recorded
+in `run_metadata.json` and included in output and summary names so repeated
+experiments remain distinguishable.
+
+```bash
+python eval/run_batch.py \
+    --agent-backend openclaw \
+    --category 01_Productivity_Flow \
+    --model openrouter/openai/gpt-5.5 \
+    --prompt-overrides-dir /path/to/prompt-dataset/tasks_modified \
+    --prompt-name tasks_modified
+```
+
 > Model-name conventions differ per harness:
 > - **OpenClaw / Codex** expect `openrouter/<provider>/<model>` (since they hit OpenRouter directly).
 > - **Claude Code / Hermes Agent** expect `<provider>/<model>` (the `openrouter/` prefix is added internally).
