@@ -1,6 +1,6 @@
 # Push to GitHub Preparation
 
-Status: Hugging Face publication and transcript cleanup complete; GitHub push in progress.
+Status: complete.
 
 This session prepares the WildClawBench code and ASR datasets for separate publication to GitHub and Hugging Face without losing transcript content or provenance.
 
@@ -33,6 +33,7 @@ This session prepares the WildClawBench code and ASR datasets for separate publi
 - The consolidated dataset is published privately at `tterumiimurett1/agentic-asr`, revision `f275a3da8a38403aefa7ab5f741c9b3a3c541a1d`.
 - Remote readback verified 3,638 paths including Hugging Face's generated `.gitattributes`: all 3,570 LFS media hashes matched and all 67 uploaded JSON/JSONL/Markdown files matched byte-for-byte.
 - After remote verification, the four covered OSWorld transcript directories were deleted: 7,020 per-recording Markdown files in total. The four canonical JSONL files and all README/WER/dataset reports remain.
+- The benchmark-focused repository changes were published to GitHub branch `origin/prompt-overrides`. Local dataset roots and ToCASR production-pipeline code are excluded by the root `.gitignore`.
 
 ## Open decisions
 
