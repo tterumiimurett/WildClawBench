@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "locked_on": "2026-09-04",
+  "purpose": "Pin the private Agentic ASR dataset consumed by this GitHub repository without duplicating dataset payloads in Git.",
+  "dataset": {
+    "repo_id": "tterumiimurett1/agentic-asr",
+    "repo_type": "dataset",
+    "visibility": "private",
+    "revision": "794a16d0513b5f4b9f4e644465fcb31352331e16",
+    "authentication": "A Hugging Face user token with read access must be supplied out of band and must never be stored in this file."
+  },
+  "integrity": {
+    "remote_tree_paths": 3640,
+    "indexed_files": 3638,
+    "indexed_bytes": 1688400051,
+    "unindexed_remote_paths": [
+      ".gitattributes",
+      "metadata/files.jsonl"
+    ],
+    "files_manifest": {
+      "path": "metadata/files.jsonl",
+      "sha256": "c29462e42b67fb22034a33b29fb5fb25cb7edea4a88ab65a87f0ffec740cad74",
+      "rows": 3638
+    },
+    "conditions_manifest": {
+      "path": "metadata/conditions.jsonl",
+      "sha256": "2fde967d9ed2c91d7908a61cb8441c8ad835a58231688961abda44388768f1e0",
+      "rows": 36
+    },
+    "dataset_card": {
+      "path": "README.md",
+      "sha256": "d62aea7eedbedfc5bee9e0e6a108735bc8319cb622c31f642eb92181fa85fe45",
+      "viewer_configs": 41
+    },
+    "indexed_file_types": {
+      "mp3": 1755,
+      "wav": 1464,
+      "png": 351,
+      "json": 33,
+      "jsonl": 26,
+      "md": 9
+    }
+  },
+  "families": {
+    "osworld": {
+      "hf_root": "osworld",
+      "indexed_files": 3553,
+      "indexed_bytes": 1377901921,
+      "local_to_hf": [
+        {
+          "local": "ToCASR/raw_instruction",
+          "hf": "osworld/synthetic/raw_instruction",
+          "fidelity": "canonical files copied with repository-relative references"
+        },
+        {
+          "local": "ToCASR/colloquial_instruction",
+          "hf": "osworld/synthetic/colloquial_instruction",
+          "fidelity": "canonical files copied with repository-relative references"
+        },
+        {
+          "local": "ToCASR/recorded_instruction",
+          "hf": "osworld/human_recordings",
+          "fidelity": "canonical audio and ASR records copied; redundant exports and per-item transcript Markdown excluded"
+        },
+        {
+          "local": "ToCASR/images",
+          "hf": "osworld/task_images",
+          "fidelity": "351 task images copied"
+        },
+        {
+          "local": "final_dataset/dns-noise-wer10",
+          "hf": "osworld/dns_noise_wer10",
+          "fidelity": "canonical paired audio, records, reports, and selected provenance copied"
+        },
+        {
+          "local": "ToCASR/bias_lists/OSWorld_biasing_list.json",
+          "hf": "osworld/bias_lists/OSWorld_biasing_list.json",
+          "fidelity": "byte-identical copy"
+        }
+      ],
+      "entrypoints": {
+        "task_config": {
+          "path": "osworld/metadata/task_config.json",
+          "sha256": "c2a661a4ba68222cd27618c5e49f66ccb4e11c63044b1b716b8358554bad0e37",
+          "tasks": 351
+        },
+        "raw_instructions": {
+          "path": "osworld/synthetic/raw_instruction/instructions.jsonl",
+          "sha256": "7bd96879b6c12c81694e0613d0114b5d0a9002e2fba9d03ed479d178bdd3a086",
+          "rows": 351
+        },
+        "colloquial_instructions": {
+          "path": "osworld/synthetic/colloquial_instruction/instructions.jsonl",
+          "sha256": "a24c0b4c33fa58b9a7d49833aaf9e0dba38bcfbefb5568a2418bdfeb1bd3d595",
+          "rows": 351
+        },
+        "human_recordings": {
+          "path": "osworld/human_recordings/manifest.jsonl",
+          "sha256": "c55d84dbea3e7c5476466c3c964464abe505e160bdaa5d77eb0395ecc4c9b74a",
+          "rows": 1755,
+          "conditions": 8
+        },
+        "dns_noise_wer10": {
+          "path": "osworld/dns_noise_wer10/records.jsonl",
+          "sha256": "84a89e67078dc06e6283f13d7953348e4f5b16336690ee880b689308c3440176",
+          "rows": 351
+        },
+        "bias_list": {
+          "path": "osworld/bias_lists/OSWorld_biasing_list.json",
+          "sha256": "797ab1863b645bebca8776c5e699f600da49f9d54f402f74630239b605521d58",
+          "tasks": 351
+        }
+      }
+    },
+    "wildclawbench": {
+      "hf_root": "wildclawbench",
+      "indexed_files": 83,
+      "indexed_bytes": 310471976,
+      "local_to_hf": [
+        {
+          "local": "colloqialized_prompt/tasks_clean",
+          "hf": "wildclawbench/synthetic/prompts.jsonl",
+          "field": "clean_prompt",
+          "fidelity": "60 formal tasks consolidated; task0_template excluded"
+        },
+        {
+          "local": "colloqialized_prompt/tasks_modified",
+          "hf": "wildclawbench/synthetic/prompts.jsonl",
+          "field": "colloquial_prompt",
+          "fidelity": "60 formal tasks consolidated; task0_template excluded"
+        },
+        {
+          "local": "colloqialized_prompt/tasks_tts",
+          "hf": "wildclawbench/synthetic/audio",
+          "fidelity": "60 formal task WAV files copied; task0_template excluded"
+        },
+        {
+          "local": "colloqialized_prompt/tasks_asr",
+          "hf": "wildclawbench/synthetic/asr",
+          "fidelity": "transcripts preserved exactly; stale audio paths rewritten to repository-relative paths"
+        },
+        {
+          "local": "colloqialized_prompt/bias_lists/WCB_task_details_biasing.json",
+          "hf": "wildclawbench/bias_lists/WCB_task_details_biasing.json",
+          "fidelity": "byte-identical copy"
+        }
+      ],
+      "entrypoints": {
+        "prompts": {
+          "path": "wildclawbench/synthetic/prompts.jsonl",
+          "sha256": "140d12d9c325bf941493f548ff75bd1865fbe131f16d959e72f788ef303e2966",
+          "rows": 60
+        },
+        "asr_conditions": {
+          "root": "wildclawbench/synthetic/asr",
+          "conditions": 20,
+          "rows_per_condition": 60,
+          "discovery_manifest": "metadata/conditions.jsonl"
+        },
+        "bias_list": {
+          "path": "wildclawbench/bias_lists/WCB_task_details_biasing.json",
+          "sha256": "052d04975c5fc9cab2a569672b7f8f5ad4877d8f03c862eb78895cce491f6d6a",
+          "tasks": 60
+        }
+      }
+    }
+  },
+  "publication_contract": {
+    "canonical_payload_location": "hugging_face_only",
+    "github_contains_dataset_payload": false,
+    "archives_are_canonical": false,
+    "per_item_transcript_markdown_is_canonical": false,
+    "excluded_artifacts": [
+      "task0_template derivatives",
+      "archive files",
+      "per-item transcript Markdown",
+      "failed retry rows",
+      "runtime logs",
+      "the additional Whisper run from OSworld_ASR.zip"
+    ]
+  }
+}

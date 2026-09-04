@@ -34,6 +34,8 @@ This session prepares the WildClawBench code and ASR datasets for separate publi
 - Final remote readback verified 3,640 paths including Hugging Face's generated `.gitattributes`. The 3,570 LFS media objects remain unchanged, and all eight files in the Bias List increment matched byte-for-byte.
 - After remote verification, the four covered OSWorld transcript directories were deleted: 7,020 per-recording Markdown files in total. The four canonical JSONL files and all README/WER/dataset reports remain.
 - The benchmark-focused repository changes were published to GitHub branch `origin/prompt-overrides`. Local dataset roots and ToCASR production-pipeline code are excluded by the root `.gitignore`.
+- GitHub pins the private Dataset through `configs/datasets/agentic-asr.lock.json`; the lock contains the immutable revision, integrity roots, logical entrypoints, and local-to-Hugging-Face mapping, but no dataset payload.
+- A final independent audit revalidated all 7,020 deleted transcript Markdown files from the pre-deletion archive and revalidated the pinned Hugging Face revision. Its verdict is `PASS`.
 
 ## Open decisions
 
@@ -45,6 +47,7 @@ This session prepares the WildClawBench code and ASR datasets for separate publi
 
 ## Session documents
 
+- [Agentic ASR dataset lock](../../../configs/datasets/agentic-asr.lock.json)
 - [Context and glossary](./CONTEXT.md)
 - [Transcript coverage evidence](./evidence/transcript-jsonl-coverage.md)
 - [Hugging Face dataset inventory](./evidence/hugging-face-dataset-inventory.md)
@@ -52,6 +55,7 @@ This session prepares the WildClawBench code and ASR datasets for separate publi
 - [`task0_template` usage audit](./evidence/task0-template-usage.md)
 - [OSWorld ASR ZIP import audit](./evidence/osworld-asr-zip-import.md)
 - [Hugging Face publication readback](./evidence/hugging-face-publication-readback.md)
+- [Final independent publication audit](./evidence/final-independent-publication-audit.md)
 - [Code and dataset publication boundary](./adr/0001-separate-code-and-dataset-publication.md)
 - [Consolidated private dataset publication](./adr/0002-consolidate-private-dataset-publication.md)
 - [Rebuild only the benchmark on the Execution Host](./adr/0003-rebuild-benchmark-on-macos-execution-host.md)
