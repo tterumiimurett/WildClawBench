@@ -53,5 +53,5 @@ The 20 aggregate JSON files use `data/tasks_tts/...` audio paths while the repos
 
 - The existing public `colloqialized_prompt` repository remains unchanged.
 - A new consolidated private Dataset, `tterumiimurett1/agentic-asr`, contains parallel `osworld/` and `wildclawbench/` families.
-- OSWorld and WildClawBench each reserve a family-scoped `bias_lists/` directory. Conditions produced with biasing are marked `pending` until the real Bias List payload is supplied.
+- OSWorld and WildClawBench each have a family-scoped `bias_lists/` directory. All ten bias-assisted conditions now reference their supplied Bias List path and SHA-256 and are marked `available`.
 - WildClawBench code remains in GitHub; ToCASR production-pipeline code and local dataset trees remain outside the GitHub repository.

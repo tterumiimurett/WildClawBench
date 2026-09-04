@@ -38,8 +38,11 @@ The biased Parakeet and Qwen records name
 `OSWorld_biasing_list.json` as their biasing source and record the number of
 task bias terms, but the Bias List payload itself is not present in the ZIP.
 The stored source values are server-local absolute or project-relative paths.
-The published metadata must therefore mark the Bias List as pending until the
-real versioned artifact is supplied.
+The initial publication therefore marked the Bias List as pending. The later
+supplied `OSWorld_biasing_list.json` covers all 351 tasks and has SHA-256
+`797ab1863b645bebca8776c5e699f600da49f9d54f402f74630239b605521d58`.
+For both biased run manifests, all 351 per-task term counts match this file
+with zero mismatches. The published conditions are now marked `available`.
 
 ## Non-canonical archive contents
 
@@ -73,8 +76,9 @@ Each output has the established five-field schema: `task_id`,
 `source_task_id`, `take`, `audio`, and `transcript`. Each has 1,755 unique task
 IDs, 1,755 unique audio paths, no empty transcripts, exact coverage of the
 recording manifest, and no task/take mapping errors. Bias-assisted outputs are
-marked `bias_list_status: pending` in
-`tasks_asr/osworld_asr_import_manifest.json`.
+marked `bias_list_status: available` in
+`tasks_asr/osworld_asr_import_manifest.json` and reference the versioned Bias
+List by path and SHA-256.
 
 Failed retry rows were excluded from canonical outputs: 894 for Parakeet
 without bias, two for Qwen without bias, zero for Parakeet with bias, and one

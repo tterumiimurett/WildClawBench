@@ -21,6 +21,10 @@ STAGE = Path("/private/tmp/agentic-asr-upload")
 TOCASR = ROOT / "ToCASR"
 WILDCLAW = ROOT / "colloqialized_prompt"
 DNS = ROOT / "final_dataset" / "dns-noise-wer10"
+OSWORLD_BIAS_SOURCE = TOCASR / "bias_lists" / "OSWorld_biasing_list.json"
+WILDCLAW_BIAS_SOURCE = WILDCLAW / "bias_lists" / "WCB_task_details_biasing.json"
+OSWORLD_BIAS_PATH = "osworld/bias_lists/OSWorld_biasing_list.json"
+WILDCLAW_BIAS_PATH = "wildclawbench/bias_lists/WCB_task_details_biasing.json"
 
 
 def require(condition: bool, message: str) -> None:
@@ -133,21 +137,30 @@ def add_condition(
     rows: int,
     source_fidelity: str,
 ) -> None:
-    conditions.append(
-        {
-            "family": family,
-            "collection": collection,
-            "model": model,
-            "variant": variant,
-            "biasing": biasing,
-            "bias_list_status": "pending" if biasing else "not_applicable",
-            "data_file": data_file.relative_to(STAGE).as_posix(),
-            "audio_root": audio_root,
-            "rows": rows,
-            "sha256": sha256(data_file),
-            "source_fidelity": source_fidelity,
-        }
-    )
+    condition = {
+        "family": family,
+        "collection": collection,
+        "model": model,
+        "variant": variant,
+        "biasing": biasing,
+        "bias_list_status": "not_applicable",
+        "data_file": data_file.relative_to(STAGE).as_posix(),
+        "audio_root": audio_root,
+        "rows": rows,
+        "sha256": sha256(data_file),
+        "source_fidelity": source_fidelity,
+    }
+    if biasing:
+        if family == "osworld":
+            condition["bias_list"] = OSWORLD_BIAS_PATH
+            condition["bias_list_sha256"] = sha256(OSWORLD_BIAS_SOURCE)
+        elif family == "wildclawbench":
+            condition["bias_list"] = WILDCLAW_BIAS_PATH
+            condition["bias_list_sha256"] = sha256(WILDCLAW_BIAS_SOURCE)
+        else:
+            raise RuntimeError(f"unknown biased family: {family}")
+        condition["bias_list_status"] = "available"
+    conditions.append(condition)
 
 
 def stage_osworld_synthetic() -> None:
@@ -267,10 +280,13 @@ def stage_osworld_human() -> None:
         )
 
     metadata = target_root / "metadata"
-    copy_file(
-        source_root / "tasks_asr" / "osworld_asr_import_manifest.json",
-        metadata / "osworld_asr_import_manifest.json",
+    import_manifest = json.loads(
+        (source_root / "tasks_asr" / "osworld_asr_import_manifest.json").read_text(
+            encoding="utf-8"
+        )
     )
+    import_manifest["bias_list"] = OSWORLD_BIAS_PATH
+    write_json(metadata / "osworld_asr_import_manifest.json", import_manifest)
     copy_file(
         source_root / "tasks_asr" / "gpt-4o-transcribe" / "reference_validation_overrides.jsonl",
         metadata / "reference_validation_overrides.jsonl",
@@ -441,10 +457,16 @@ def stage_wildclawbench() -> None:
         )
 
 
-def stage_bias_placeholders() -> None:
-    text = """# Bias Lists\n\nNo Bias List payload is published yet. Conditions marked as bias-assisted use\n`bias_list_status: pending` in `metadata/conditions.jsonl`. Add a versioned Bias\nList here later and update those condition records with its path and checksum.\n"""
-    for family in ("osworld", "wildclawbench"):
-        path = STAGE / family / "bias_lists" / "README.md"
+def stage_bias_lists() -> None:
+    copy_file(OSWORLD_BIAS_SOURCE, STAGE / OSWORLD_BIAS_PATH)
+    copy_file(WILDCLAW_BIAS_SOURCE, STAGE / WILDCLAW_BIAS_PATH)
+    osworld_text = f"""# OSWorld Bias List\n\n`OSWorld_biasing_list.json` covers all 351 OSWorld tasks. Each task stores the\nconfig-derived terms, image-derived terms, and their stable deduplicated union.\nThe union length matches the recorded `task_biasing_terms` for every task in\nboth the Parakeet and Qwen biased-run manifests (zero mismatches).\n\nSHA-256: `{sha256(OSWORLD_BIAS_SOURCE)}`\n"""
+    wildclaw_text = f"""# WildClawBench Bias List\n\n`WCB_task_details_biasing.json` covers all 60 formal WildClawBench tasks and\ncontains 3,119 non-empty, task-local unique Bias List terms. `task0_template`\nis not part of this file because it is not a formal benchmark task.\n\nSHA-256: `{sha256(WILDCLAW_BIAS_SOURCE)}`\n"""
+    for relative, text in (
+        ("osworld/bias_lists/README.md", osworld_text),
+        ("wildclawbench/bias_lists/README.md", wildclaw_text),
+    ):
+        path = STAGE / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
 
@@ -484,9 +506,10 @@ def write_dataset_card() -> None:
             "`OSworld_ASR.zip` are included. The ZIP's additional Whisper run is excluded.",
             "Existing, separately produced Whisper v3 JSONLs remain as their own conditions.",
             "",
-            "Bias-assisted conditions are present, but the underlying Bias List files have",
-            "not yet been supplied. They are explicitly marked `pending`; no placeholder",
-            "vocabulary has been fabricated.",
+            "Bias-assisted conditions reference their published, versioned source files:",
+            "`osworld/bias_lists/OSWorld_biasing_list.json` and",
+            "`wildclawbench/bias_lists/WCB_task_details_biasing.json`. The condition manifest",
+            "records each file's SHA-256 and marks all ten biased conditions `available`.",
             "",
             "WildClawBench aggregate ASR transcript strings are unchanged. Only their stale",
             "`data/tasks_tts/...` audio paths were rewritten to repository-relative paths.",
@@ -502,7 +525,8 @@ def write_dataset_card() -> None:
 def write_metadata() -> None:
     conditions.sort(key=lambda row: (row["family"], row["collection"], row["model"], row["variant"]))
     write_jsonl(STAGE / "metadata" / "conditions.jsonl", conditions)
-    require(sum(row["bias_list_status"] == "pending" for row in conditions) == 10, "expected 10 pending bias conditions")
+    require(not any(row["bias_list_status"] == "pending" for row in conditions), "pending bias condition remains")
+    require(sum(row["bias_list_status"] == "available" for row in conditions) == 10, "expected 10 available bias conditions")
 
     file_rows: list[dict[str, Any]] = []
     for path in sorted(item for item in STAGE.rglob("*") if item.is_file()):
@@ -529,7 +553,7 @@ def main() -> None:
     stage_osworld_images()
     stage_osworld_shared_metadata()
     stage_wildclawbench()
-    stage_bias_placeholders()
+    stage_bias_lists()
     write_dataset_card()
     write_metadata()
     print(json.dumps({"stage": str(STAGE), "configs": len(configs), "conditions": len(conditions)}))

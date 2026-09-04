@@ -26,12 +26,12 @@ This session prepares the WildClawBench code and ASR datasets for separate publi
 - Both dataset families reserve parallel structure for synthetic audio and human recordings, even though WildClawBench human recordings will be added later.
 - `task0_template` is not formal WildClawBench data. Its derived clean/modified text, TTS audio, and ASR transcripts are excluded from publication and do not require conversion into canonical JSON.
 - The four original OSWorld human-recording JSONL files are the sole transcript copies for those conditions. A small manifest and Hugging Face configuration may describe their model, variant, row count, checksum, and audio root, but must not duplicate transcript payloads.
-- Each dataset family reserves a `bias_lists/` collection at family scope so synthetic and future human-recording ASR conditions can reference the same versioned biasing scheme. WildClawBench bias lists are not yet available and will be added later rather than represented by fake placeholder data.
-- The eight existing WildClawBench ASR JSON files labeled `_bias` publish with `bias_list_status: pending` until their Bias List is supplied.
+- Each dataset family has a `bias_lists/` collection at family scope so synthetic and future human-recording ASR conditions reference the same versioned biasing scheme.
+- The eight WildClawBench `_bias` conditions reference `WCB_task_details_biasing.json`; the two OSWorld biased human-recording conditions reference `OSWorld_biasing_list.json`. All ten are marked `bias_list_status: available` with source SHA-256 values.
 - The supplied `OSworld_ASR.zip` was copied byte-for-byte to `ToCASR/OSworld_ASR.zip` before inspection; both copies have SHA-256 `fcf1fca8ae84974f3cea761ed3558c61186f3162e7d0734f034deb87b6ac18c4`.
 - `OSworld_ASR.zip` contributes only Parakeet and Qwen with/without-bias conditions. Its additional Whisper run is explicitly excluded. Four canonical 1,755-row JSONL files were generated from successful records; retry failures, per-item text copies, and run logs are not formal dataset rows.
-- The consolidated dataset is published privately at `tterumiimurett1/agentic-asr`, revision `f275a3da8a38403aefa7ab5f741c9b3a3c541a1d`.
-- Remote readback verified 3,638 paths including Hugging Face's generated `.gitattributes`: all 3,570 LFS media hashes matched and all 67 uploaded JSON/JSONL/Markdown files matched byte-for-byte.
+- The consolidated dataset is published privately at `tterumiimurett1/agentic-asr`, current verified revision `794a16d0513b5f4b9f4e644465fcb31352331e16`.
+- Final remote readback verified 3,640 paths including Hugging Face's generated `.gitattributes`. The 3,570 LFS media objects remain unchanged, and all eight files in the Bias List increment matched byte-for-byte.
 - After remote verification, the four covered OSWorld transcript directories were deleted: 7,020 per-recording Markdown files in total. The four canonical JSONL files and all README/WER/dataset reports remain.
 - The benchmark-focused repository changes were published to GitHub branch `origin/prompt-overrides`. Local dataset roots and ToCASR production-pipeline code are excluded by the root `.gitignore`.
 
