@@ -43,6 +43,10 @@ output_qwen.rar
 
 # Local prompt datasets, experiments, and validation artifacts.
 /colloqialized_prompt/
+/ToCASR/
+/final_dataset/
+/to_terumi/
+/。
 /tutorial/
 /eval/experiments/
 /eval/regrade_saved_outputs.py
