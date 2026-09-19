@@ -1,51 +1,51 @@
 {
   "schema_version": 1,
-  "locked_on": "2026-09-04",
-  "purpose": "Pin the private Agentic ASR dataset consumed by this GitHub repository without duplicating dataset payloads in Git.",
+  "locked_on": "2026-09-20",
+  "purpose": "Pin the public Agentic ASR dataset consumed by this GitHub repository without duplicating dataset payloads in Git.",
   "dataset": {
     "repo_id": "tterumiimurett1/agentic-asr",
     "repo_type": "dataset",
-    "visibility": "private",
-    "revision": "794a16d0513b5f4b9f4e644465fcb31352331e16",
-    "authentication": "A Hugging Face user token with read access must be supplied out of band and must never be stored in this file."
+    "visibility": "public",
+    "revision": "93e7056b503d3bfd2124ebf0953cd93ac79287eb",
+    "authentication": "No token is required for read access. Write credentials must remain out of band."
   },
   "integrity": {
-    "remote_tree_paths": 3640,
-    "indexed_files": 3638,
-    "indexed_bytes": 1688400051,
+    "remote_tree_paths": 3645,
+    "indexed_files": 3643,
+    "indexed_bytes": 1690986795,
     "unindexed_remote_paths": [
       ".gitattributes",
       "metadata/files.jsonl"
     ],
     "files_manifest": {
       "path": "metadata/files.jsonl",
-      "sha256": "c29462e42b67fb22034a33b29fb5fb25cb7edea4a88ab65a87f0ffec740cad74",
-      "rows": 3638
+      "sha256": "9cf58bcfdcb6cf89281f45cf7a87cd1f9c67595a01dc7ecf35bc5a3c507161d3",
+      "rows": 3643
     },
     "conditions_manifest": {
       "path": "metadata/conditions.jsonl",
-      "sha256": "2fde967d9ed2c91d7908a61cb8441c8ad835a58231688961abda44388768f1e0",
-      "rows": 36
+      "sha256": "28b7d659ec2615bd620170b0fd738f51add786fb41cfe8a0f299aa0e6ae33f21",
+      "rows": 40
     },
     "dataset_card": {
       "path": "README.md",
-      "sha256": "d62aea7eedbedfc5bee9e0e6a108735bc8319cb622c31f642eb92181fa85fe45",
-      "viewer_configs": 41
+      "sha256": "bf8582b0da803f4f8fcbf706c9e5e9a7948be1a3c148b5b6eb2da145b53456a6",
+      "viewer_configs": 45
     },
     "indexed_file_types": {
       "mp3": 1755,
       "wav": 1464,
       "png": 351,
-      "json": 33,
-      "jsonl": 26,
+      "json": 34,
+      "jsonl": 30,
       "md": 9
     }
   },
   "families": {
     "osworld": {
       "hf_root": "osworld",
-      "indexed_files": 3553,
-      "indexed_bytes": 1377901921,
+      "indexed_files": 3558,
+      "indexed_bytes": 1380484921,
       "local_to_hf": [
         {
           "local": "ToCASR/raw_instruction",
@@ -98,7 +98,7 @@
           "path": "osworld/human_recordings/manifest.jsonl",
           "sha256": "c55d84dbea3e7c5476466c3c964464abe505e160bdaa5d77eb0395ecc4c9b74a",
           "rows": 1755,
-          "conditions": 8
+          "conditions": 12
         },
         "dns_noise_wer10": {
           "path": "osworld/dns_noise_wer10/records.jsonl",

@@ -136,6 +136,7 @@ def add_condition(
     audio_root: str,
     rows: int,
     source_fidelity: str,
+    metadata: dict[str, Any] | None = None,
 ) -> None:
     condition = {
         "family": family,
@@ -150,6 +151,8 @@ def add_condition(
         "sha256": sha256(data_file),
         "source_fidelity": source_fidelity,
     }
+    if metadata:
+        condition.update(metadata)
     if biasing:
         if family == "osworld":
             condition["bias_list"] = OSWORLD_BIAS_PATH
@@ -243,8 +246,12 @@ def stage_osworld_human() -> None:
         Path("whisper_v3/typeless_ontology_fix.jsonl"),
         Path("parakeet_tdt_0.6b_v2/raw_asr.jsonl"),
         Path("parakeet_tdt_0.6b_v2/raw_asr_bias.jsonl"),
+        Path("parakeet_tdt_0.6b_v2/typeless_ontology_fix.jsonl"),
+        Path("parakeet_tdt_0.6b_v2/bias_typeless_ontology_fix.jsonl"),
         Path("qwen2.5_omni_7b/raw_asr.jsonl"),
         Path("qwen2.5_omni_7b/raw_asr_bias.jsonl"),
+        Path("qwen2.5_omni_7b/typeless_ontology_fix.jsonl"),
+        Path("qwen2.5_omni_7b/bias_typeless_ontology_fix.jsonl"),
     )
     for relative in selected:
         source = source_root / "tasks_asr" / relative
@@ -255,7 +262,7 @@ def stage_osworld_human() -> None:
         require(rows == 1755, f"expected 1,755 rows in {source}")
         model = relative.parent.name
         variant = relative.stem
-        biased = variant.endswith("_bias")
+        biased = variant.startswith("bias_") or variant.endswith("_bias")
         add_config(
             "-".join(
                 (
@@ -276,7 +283,19 @@ def stage_osworld_human() -> None:
             data_file=target,
             audio_root="osworld/human_recordings/source/All Recordings",
             rows=rows,
-            source_fidelity="byte_identical_copy",
+            source_fidelity=(
+                "ontology_normalized_metadata_preserved"
+                if "ontology" in variant
+                else "byte_identical_copy"
+            ),
+            metadata=(
+                {
+                    "normalizer_model": "gpt-5.6-luna",
+                    "normalizer_prompt_sha256": "36ea5ad12ccf313be185a3cb187e63984c08b66eabf6c4ccccf6046de74dffe7",
+                }
+                if "ontology" in variant and model in {"parakeet_tdt_0.6b_v2", "qwen2.5_omni_7b"}
+                else None
+            ),
         )
 
     metadata = target_root / "metadata"
@@ -287,6 +306,10 @@ def stage_osworld_human() -> None:
     )
     import_manifest["bias_list"] = OSWORLD_BIAS_PATH
     write_json(metadata / "osworld_asr_import_manifest.json", import_manifest)
+    copy_file(
+        source_root / "tasks_asr" / "ontology_fix_manifest.json",
+        metadata / "ontology_fix_manifest.json",
+    )
     copy_file(
         source_root / "tasks_asr" / "gpt-4o-transcribe" / "reference_validation_overrides.jsonl",
         metadata / "reference_validation_overrides.jsonl",
@@ -505,11 +528,13 @@ def write_dataset_card() -> None:
             "Parakeet TDT 0.6B v2 and Qwen2.5-Omni-7B with/without-bias results from",
             "`OSworld_ASR.zip` are included. The ZIP's additional Whisper run is excluded.",
             "Existing, separately produced Whisper v3 JSONLs remain as their own conditions.",
+            "The Parakeet/Qwen ontology-fix conditions were derived with ByteDance",
+            "ModelHub `gpt-5.6-luna`; see the human-recordings ontology manifest.",
             "",
             "Bias-assisted conditions reference their published, versioned source files:",
             "`osworld/bias_lists/OSWorld_biasing_list.json` and",
             "`wildclawbench/bias_lists/WCB_task_details_biasing.json`. The condition manifest",
-            "records each file's SHA-256 and marks all ten biased conditions `available`.",
+            "records each file's SHA-256 and marks all twelve biased conditions `available`.",
             "",
             "WildClawBench aggregate ASR transcript strings are unchanged. Only their stale",
             "`data/tasks_tts/...` audio paths were rewritten to repository-relative paths.",
@@ -526,7 +551,7 @@ def write_metadata() -> None:
     conditions.sort(key=lambda row: (row["family"], row["collection"], row["model"], row["variant"]))
     write_jsonl(STAGE / "metadata" / "conditions.jsonl", conditions)
     require(not any(row["bias_list_status"] == "pending" for row in conditions), "pending bias condition remains")
-    require(sum(row["bias_list_status"] == "available" for row in conditions) == 10, "expected 10 available bias conditions")
+    require(sum(row["bias_list_status"] == "available" for row in conditions) == 12, "expected 12 available bias conditions")
 
     file_rows: list[dict[str, Any]] = []
     for path in sorted(item for item in STAGE.rglob("*") if item.is_file()):
