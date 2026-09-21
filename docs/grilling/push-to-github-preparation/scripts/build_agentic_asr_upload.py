@@ -480,6 +480,129 @@ def stage_wildclawbench() -> None:
         )
 
 
+def stage_wildclawbench_human() -> None:
+    source_root = WILDCLAW / "human_recordings"
+    target_root = STAGE / "wildclawbench" / "human_recordings"
+    source_audio_root = source_root / "audio"
+
+    audio_files = sorted(source_audio_root.glob("*/*.wav"))
+    require(len(audio_files) == 600, "expected 600 WildClawBench human recordings")
+    participants = {source.parent.name for source in audio_files}
+    require(len(participants) == 10, "expected 10 WildClawBench human-recording participants")
+    for participant in participants:
+        require(
+            sum(source.parent.name == participant for source in audio_files) == 60,
+            f"expected 60 recordings for participant {participant}",
+        )
+    for source in audio_files:
+        hardlink_file(source, target_root / "audio" / source.relative_to(source_audio_root))
+
+    manifest_source = source_root / "asr" / "import_manifest.json"
+    manifest_target = target_root / "asr" / "import_manifest.json"
+    copy_file(manifest_source, manifest_target)
+
+    selected = (
+        (Path("parakeet/all-asr-data_parakeet-ctc.json"), "parakeet-ctc", False, 600, "raw_asr"),
+        (Path("parakeet/all-asr-data_parakeet-ctc_bias.json"), "parakeet-ctc", True, 600, "raw_asr"),
+        (Path("qwen/all-asr-data_qwen-omni.json"), "qwen-omni", False, 507, "raw_asr"),
+        (Path("qwen/all-asr-data_qwen-omni_bias.json"), "qwen-omni", True, 507, "raw_asr"),
+        (Path("parakeet/all-asr-data_parakeet-ctc_typeless-ontology-fix.json"), "parakeet-ctc", False, 600, "typeless_ontology_fix"),
+        (Path("parakeet/all-asr-data_parakeet-ctc_bias_typeless-ontology-fix.json"), "parakeet-ctc", True, 600, "typeless_ontology_fix"),
+        (Path("qwen/all-asr-data_qwen-omni_typeless-ontology-fix.json"), "qwen-omni", False, 507, "typeless_ontology_fix"),
+        (Path("qwen/all-asr-data_qwen-omni_bias_typeless-ontology-fix.json"), "qwen-omni", True, 507, "typeless_ontology_fix"),
+    )
+    ontology_manifest_source = source_root / "asr" / "ontology_fix_manifest.json"
+    ontology_manifest = json.loads(ontology_manifest_source.read_text(encoding="utf-8"))
+    require(ontology_manifest["normalizer"]["model"] == "gpt-5.6-luna", "wrong human normalizer model")
+    require(
+        ontology_manifest["normalizer"]["prompt_sha256"] == sha256(WILDCLAW / "prompts" / "normalize_transcript.md"),
+        "human ontology prompt hash changed",
+    )
+    copy_file(ontology_manifest_source, target_root / "asr" / "ontology_fix_manifest.json")
+    copy_file(
+        WILDCLAW / "prompts" / "normalize_transcript.md",
+        target_root / "asr" / "ontology_fix_prompt.md",
+    )
+    provenance = {entry["output"]: entry for entry in ontology_manifest["conditions"]}
+    parakeet_audio: set[str] | None = None
+    qwen_audio: set[str] | None = None
+    raw_rows_by_condition: dict[tuple[str, bool], list[dict[str, Any]]] = {}
+    for relative, model, biased, expected_rows, variant in selected:
+        source = source_root / "asr" / relative
+        target = target_root / "asr" / relative
+        copy_file(source, target)
+        rows = json.loads(target.read_text(encoding="utf-8"))
+        require(isinstance(rows, list) and len(rows) == expected_rows, f"bad aggregate: {source}")
+        require(
+            all(set(row) == {"audio", "category", "transcription"} for row in rows),
+            f"bad schema: {source}",
+        )
+        audio_set = {row["audio"] for row in rows}
+        require(len(audio_set) == expected_rows, f"duplicate audio reference: {source}")
+        for audio in audio_set:
+            prefix = "wildclawbench/human_recordings/audio/"
+            require(audio.startswith(prefix), f"unexpected audio path: {audio}")
+            require((source_audio_root / audio.removeprefix(prefix)).is_file(), f"missing audio: {audio}")
+
+        condition_key = (model, biased)
+        if variant == "raw_asr":
+            raw_rows_by_condition[condition_key] = rows
+        else:
+            require(relative.as_posix() in provenance, f"missing ontology provenance: {relative}")
+            require(provenance[relative.as_posix()]["output_sha256"] == sha256(source), f"ontology hash mismatch: {source}")
+            source_rows = raw_rows_by_condition[condition_key]
+            require(
+                [{key: value for key, value in row.items() if key != "transcription"} for row in rows]
+                == [{key: value for key, value in row.items() if key != "transcription"} for row in source_rows],
+                f"ontology metadata changed: {source}",
+            )
+
+        if model == "parakeet-ctc":
+            if parakeet_audio is None:
+                parakeet_audio = audio_set
+            else:
+                require(audio_set == parakeet_audio, "Parakeet bias/unbias audio sets differ")
+            dataset_scope = "unfiltered_full_set"
+            metadata = {"dataset_scope": dataset_scope, "excluded_as_dirty": 0}
+        else:
+            if qwen_audio is None:
+                qwen_audio = audio_set
+            else:
+                require(audio_set == qwen_audio, "Qwen bias/unbias audio sets differ")
+            dataset_scope = "cleaned_subset"
+            metadata = {
+                "dataset_scope": dataset_scope,
+                "excluded_as_dirty_relative_to_parakeet_full_set": 93,
+            }
+
+        condition_name = relative.stem.removeprefix("all-asr-data_")
+        add_config(
+            f"wildclawbench-human-recordings-{condition_name}".replace("_", "-"),
+            target,
+        )
+        if variant == "typeless_ontology_fix":
+            metadata["normalizer_model"] = "gpt-5.6-luna"
+            metadata["normalizer_prompt_sha256"] = ontology_manifest["normalizer"]["prompt_sha256"]
+            metadata["ontology_fix_manifest"] = "wildclawbench/human_recordings/asr/ontology_fix_manifest.json"
+        add_condition(
+            family="wildclawbench",
+            collection="human_recordings",
+            model=model,
+            variant=variant,
+            biasing=biased,
+            data_file=target,
+            audio_root="wildclawbench/human_recordings/audio",
+            rows=expected_rows,
+            source_fidelity="byte_identical_copy" if variant == "raw_asr" else "source_metadata_preserved_transcription_normalized",
+            metadata=metadata,
+        )
+
+    require(parakeet_audio is not None and len(parakeet_audio) == 600, "bad Parakeet coverage")
+    require(qwen_audio is not None and len(qwen_audio) == 507, "bad Qwen coverage")
+    require(qwen_audio < parakeet_audio, "Qwen cleaned set must be a strict Parakeet subset")
+    require(len(parakeet_audio - qwen_audio) == 93, "expected 93 Qwen dirty-data exclusions")
+
+
 def stage_bias_lists() -> None:
     copy_file(OSWORLD_BIAS_SOURCE, STAGE / OSWORLD_BIAS_PATH)
     copy_file(WILDCLAW_BIAS_SOURCE, STAGE / WILDCLAW_BIAS_PATH)
@@ -508,15 +631,17 @@ def write_dataset_card() -> None:
             "",
             "# Agentic ASR",
             "",
-            "Private consolidated audio and ASR result dataset for the OSWorld and",
+            "Public consolidated audio and ASR result dataset for the OSWorld and",
             "WildClawBench benchmark families.",
             "",
             "## Layout",
             "",
             "- `osworld/`: synthetic raw/colloquial speech, human recordings, DNS-noise",
             "  pairs, task images, ASR results, and reports.",
-            "- `wildclawbench/`: 60 formal colloquialized prompts, their synthetic speech,",
-            "  and 20 ASR condition tables. `task0_template` derivatives are excluded.",
+            "- `wildclawbench/`: 60 formal colloquialized prompts, synthetic speech,",
+            "  20 synthetic ASR condition tables, and ten-participant human recordings",
+            "  with eight ASR conditions (four raw, four ontology-fixed).",
+            "  `task0_template` derivatives are excluded.",
             "- `metadata/conditions.jsonl`: model, variant, biasing, row count, checksum,",
             "  and audio-root metadata without duplicating transcript payloads.",
             "- `metadata/files.jsonl`: repository-wide file hashes and sizes.",
@@ -534,13 +659,22 @@ def write_dataset_card() -> None:
             "Bias-assisted conditions reference their published, versioned source files:",
             "`osworld/bias_lists/OSWorld_biasing_list.json` and",
             "`wildclawbench/bias_lists/WCB_task_details_biasing.json`. The condition manifest",
-            "records each file's SHA-256 and marks all twelve biased conditions `available`.",
+            "records each file's SHA-256 and marks all sixteen biased conditions `available`.",
             "",
             "WildClawBench aggregate ASR transcript strings are unchanged. Only their stale",
             "`data/tasks_tts/...` audio paths were rewritten to repository-relative paths.",
             "",
-            "This private migration does not by itself establish redistribution rights for",
-            "a future public release. Review source licenses before changing visibility.",
+            "For WildClawBench human recordings, Parakeet retains the unfiltered 600-file",
+            "set. Qwen uses a cleaned 507-file subset after 93 dirty recordings were removed;",
+            "its biased and unbiased conditions cover the same subset. The supplied metadata",
+            "does not state the dirty-data exclusion criteria.",
+            "The four WildClawBench human-recording ontology-fix conditions use",
+            "ByteDance ModelHub `gpt-5.6-luna`, matching OSWorld human-recording",
+            "Parakeet/Qwen bias and unbiased ontology fixes. Other prior fixes use",
+            "GPT-5.4. The two legacy 60-row Parakeet 01男 fixes were not reused;",
+            "all 600 rows per Parakeet condition were regenerated from raw ASR.",
+            "The prompt hash, input/output hashes, and call settings are recorded in",
+            "`wildclawbench/human_recordings/asr/ontology_fix_manifest.json`.",
             "",
         ]
     )
@@ -551,7 +685,7 @@ def write_metadata() -> None:
     conditions.sort(key=lambda row: (row["family"], row["collection"], row["model"], row["variant"]))
     write_jsonl(STAGE / "metadata" / "conditions.jsonl", conditions)
     require(not any(row["bias_list_status"] == "pending" for row in conditions), "pending bias condition remains")
-    require(sum(row["bias_list_status"] == "available" for row in conditions) == 12, "expected 12 available bias conditions")
+    require(sum(row["bias_list_status"] == "available" for row in conditions) == 16, "expected 16 available bias conditions")
 
     file_rows: list[dict[str, Any]] = []
     for path in sorted(item for item in STAGE.rglob("*") if item.is_file()):
@@ -578,6 +712,7 @@ def main() -> None:
     stage_osworld_images()
     stage_osworld_shared_metadata()
     stage_wildclawbench()
+    stage_wildclawbench_human()
     stage_bias_lists()
     write_dataset_card()
     write_metadata()

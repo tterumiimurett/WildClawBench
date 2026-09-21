@@ -1,44 +1,44 @@
 {
   "schema_version": 1,
-  "locked_on": "2026-09-20",
+  "locked_on": "2026-09-21",
   "purpose": "Pin the public Agentic ASR dataset consumed by this GitHub repository without duplicating dataset payloads in Git.",
   "dataset": {
     "repo_id": "tterumiimurett1/agentic-asr",
     "repo_type": "dataset",
     "visibility": "public",
-    "revision": "93e7056b503d3bfd2124ebf0953cd93ac79287eb",
+    "revision": "de19aa31572449686166680810468dea86608329",
     "authentication": "No token is required for read access. Write credentials must remain out of band."
   },
   "integrity": {
-    "remote_tree_paths": 3645,
-    "indexed_files": 3643,
-    "indexed_bytes": 1690986795,
+    "remote_tree_paths": 4256,
+    "indexed_files": 4254,
+    "indexed_bytes": 4624524448,
     "unindexed_remote_paths": [
       ".gitattributes",
       "metadata/files.jsonl"
     ],
     "files_manifest": {
       "path": "metadata/files.jsonl",
-      "sha256": "9cf58bcfdcb6cf89281f45cf7a87cd1f9c67595a01dc7ecf35bc5a3c507161d3",
-      "rows": 3643
+      "sha256": "ab6e1f176486a6134dad513ceda821f15a63bdfcf35caeb80cb645f6acff631a",
+      "rows": 4254
     },
     "conditions_manifest": {
       "path": "metadata/conditions.jsonl",
-      "sha256": "28b7d659ec2615bd620170b0fd738f51add786fb41cfe8a0f299aa0e6ae33f21",
-      "rows": 40
+      "sha256": "211b8f0cc36a861c0594e90aadccd706fdedbb76d29bb35b9fe0e8e7ed35d4fc",
+      "rows": 48
     },
     "dataset_card": {
       "path": "README.md",
-      "sha256": "bf8582b0da803f4f8fcbf706c9e5e9a7948be1a3c148b5b6eb2da145b53456a6",
-      "viewer_configs": 45
+      "sha256": "8d67a7b943ec04ca60366e349b54f431214149d59813449304731aabce684301",
+      "viewer_configs": 53
     },
     "indexed_file_types": {
       "mp3": 1755,
-      "wav": 1464,
+      "wav": 2064,
       "png": 351,
-      "json": 34,
+      "json": 44,
       "jsonl": 30,
-      "md": 9
+      "md": 10
     }
   },
   "families": {
@@ -114,8 +114,8 @@
     },
     "wildclawbench": {
       "hf_root": "wildclawbench",
-      "indexed_files": 83,
-      "indexed_bytes": 310471976,
+      "indexed_files": 694,
+      "indexed_bytes": 3244001747,
       "local_to_hf": [
         {
           "local": "colloqialized_prompt/tasks_clean",
@@ -140,6 +140,11 @@
           "fidelity": "transcripts preserved exactly; stale audio paths rewritten to repository-relative paths"
         },
         {
+          "local": "colloqialized_prompt/human_recordings",
+          "hf": "wildclawbench/human_recordings",
+          "fidelity": "600 original recordings and four raw ASR aggregates copied byte-identically; four GPT-5.6 Luna ontology-fix aggregates added from raw ASR. Parakeet retains the unfiltered 600-file set while Qwen uses a cleaned 507-file subset"
+        },
+        {
           "local": "colloqialized_prompt/bias_lists/WCB_task_details_biasing.json",
           "hf": "wildclawbench/bias_lists/WCB_task_details_biasing.json",
           "fidelity": "byte-identical copy"
@@ -156,6 +161,26 @@
           "conditions": 20,
           "rows_per_condition": 60,
           "discovery_manifest": "metadata/conditions.jsonl"
+        },
+        "human_recordings": {
+          "path": "wildclawbench/human_recordings/asr/import_manifest.json",
+          "sha256": "494521abb4ff0e3065318e001f27f69f1e1316127cce57c3645df3e8546a8917",
+          "audio_files": 600,
+          "participants": 10,
+          "conditions": 8,
+          "parakeet_rows_per_condition": 600,
+          "qwen_rows_per_condition": 507,
+          "qwen_excluded_as_dirty_relative_to_parakeet": 93,
+          "ontology_fix": {
+            "model": "gpt-5.6-luna",
+            "path": "wildclawbench/human_recordings/asr/ontology_fix_manifest.json",
+            "sha256": "56beeef24f4c3843c3e65863264e4c9a3c502491d03282eeecffb90174051c66",
+            "prompt_path": "wildclawbench/human_recordings/asr/ontology_fix_prompt.md",
+            "prompt_sha256": "36ea5ad12ccf313be185a3cb187e63984c08b66eabf6c4ccccf6046de74dffe7",
+            "source": "all four raw ASR aggregates; prior 60-row Parakeet 01男 GPT-5.4 output not reused",
+            "parakeet_rows_per_condition": 600,
+            "qwen_rows_per_condition": 507
+          }
         },
         "bias_list": {
           "path": "wildclawbench/bias_lists/WCB_task_details_biasing.json",

@@ -23,19 +23,20 @@ This session prepares the WildClawBench code and ASR datasets for separate publi
 - ToCASR pipeline code is outside the WildClawBench GitHub publication scope because it belongs to a separate data-production project.
 - The consolidated public dataset is named `Agentic ASR`, at Hugging Face repository `tterumiimurett1/agentic-asr`.
 - Local `ToCASR/` assets publish under the `OSWorld` dataset family; local `colloqialized_prompt/` assets publish under the `WildClawBench` dataset family.
-- Both dataset families reserve parallel structure for synthetic audio and human recordings, even though WildClawBench human recordings will be added later.
+- Both dataset families use parallel structure for synthetic audio and human recordings. WildClawBench now includes 600 recordings from 10 participants.
 - `task0_template` is not formal WildClawBench data. Its derived clean/modified text, TTS audio, and ASR transcripts are excluded from publication and do not require conversion into canonical JSON.
 - The four original OSWorld human-recording JSONL files are the sole transcript copies for those conditions. A small manifest and Hugging Face configuration may describe their model, variant, row count, checksum, and audio root, but must not duplicate transcript payloads.
 - Each dataset family has a `bias_lists/` collection at family scope so synthetic and future human-recording ASR conditions reference the same versioned biasing scheme.
-- The eight WildClawBench `_bias` conditions reference `WCB_task_details_biasing.json`; four OSWorld biased human-recording conditions reference `OSWorld_biasing_list.json`. All twelve are marked `bias_list_status: available` with source SHA-256 values.
+- The twelve WildClawBench `_bias` conditions reference `WCB_task_details_biasing.json`; four OSWorld biased human-recording conditions reference `OSWorld_biasing_list.json`. All sixteen are marked `bias_list_status: available` with source SHA-256 values.
 - The supplied `OSworld_ASR.zip` was copied byte-for-byte to `ToCASR/OSworld_ASR.zip` before inspection; both copies have SHA-256 `fcf1fca8ae84974f3cea761ed3558c61186f3162e7d0734f034deb87b6ac18c4`.
 - `OSworld_ASR.zip` contributes only Parakeet and Qwen with/without-bias conditions. Its additional Whisper run is explicitly excluded. Four canonical 1,755-row JSONL files were generated from successful records; retry failures, per-item text copies, and run logs are not formal dataset rows.
-- The consolidated dataset is public at `tterumiimurett1/agentic-asr`, current verified revision `93e7056b503d3bfd2124ebf0953cd93ac79287eb`.
+- The consolidated dataset is public at `tterumiimurett1/agentic-asr`, current verified revision `de19aa31572449686166680810468dea86608329`.
 - Four OSWorld human-recording ontology variants for Parakeet TDT 0.6B v2 and Qwen2.5-Omni-7B were generated with `gpt-5.6-luna`; bias precedes ontology in biased condition names.
-- Final remote readback verified 3,645 paths including Hugging Face's generated `.gitattributes`. The four ontology JSONLs and five metadata files in the Luna increment matched byte-for-byte.
+- Four WildClawBench human-recording ontology variants for Parakeet CTC and Qwen Omni were generated from raw ASR with `gpt-5.6-luna` (600/600/507/507 rows). The two old 60-row Parakeet `01男` GPT-5.4 outputs were not reused. All other pre-existing ontology-fix results remain attributed to GPT-5.4.
+- Latest remote readback verified 4,256 paths including Hugging Face's generated `.gitattributes`. The ten newly uploaded or updated files, including four ontology aggregates, the prompt, provenance, Dataset Card, and repository indexes, matched the local staging tree byte-for-byte.
 - After remote verification, the four covered OSWorld transcript directories were deleted: 7,020 per-recording Markdown files in total. The four canonical JSONL files and all README/WER/dataset reports remain.
 - The benchmark-focused repository changes were published to GitHub branch `origin/prompt-overrides`. Local dataset roots and ToCASR production-pipeline code are excluded by the root `.gitignore`.
-- GitHub pins the private Dataset through `configs/datasets/agentic-asr.lock.json`; the lock contains the immutable revision, integrity roots, logical entrypoints, and local-to-Hugging-Face mapping, but no dataset payload.
+- GitHub pins the public Dataset through `configs/datasets/agentic-asr.lock.json`; the lock contains the immutable revision, integrity roots, logical entrypoints, and local-to-Hugging-Face mapping, but no dataset payload.
 - A final independent audit revalidated all 7,020 deleted transcript Markdown files from the pre-deletion archive and revalidated the pinned Hugging Face revision. Its verdict is `PASS`.
 
 ## Open decisions
@@ -57,6 +58,8 @@ This session prepares the WildClawBench code and ASR datasets for separate publi
 - [OSWorld ASR ZIP import audit](./evidence/osworld-asr-zip-import.md)
 - [Hugging Face publication readback](./evidence/hugging-face-publication-readback.md)
 - [Final independent publication audit](./evidence/final-independent-publication-audit.md)
+- [WildClawBench human-recordings publication](./evidence/wildclawbench-human-recordings-publication.md)
+- [WildClawBench human ontology-fix publication](./evidence/wildclawbench-human-ontology-publication.md)
 - [Code and dataset publication boundary](./adr/0001-separate-code-and-dataset-publication.md)
 - [Consolidated private dataset publication](./adr/0002-consolidate-private-dataset-publication.md)
 - [Rebuild only the benchmark on the Execution Host](./adr/0003-rebuild-benchmark-on-macos-execution-host.md)
