@@ -318,14 +318,14 @@ python eval/run_batch.py \
 ```
 
 > Model-name conventions differ per harness:
-> - **OpenClaw / Codex** expect `openrouter/<provider>/<model>` (since they hit OpenRouter directly).
+> - **OpenClaw / Codex using OpenRouter** expect `openrouter/<provider>/<model>`.
 > - **Claude Code / Hermes Agent** expect `<provider>/<model>` (the `openrouter/` prefix is added internally).
 
 ### Using a Custom Model Endpoint (Without OpenRouter)
 
-This option currently applies to the **OpenClaw harness** only. If you prefer to use your own API endpoint instead of OpenRouter, you can provide a JSON file and WildClawBench will inject it into `~/.openclaw/openclaw.json` before each task starts.
+OpenClaw accepts a models JSON file. Codex accepts a Responses-compatible provider through environment variables.
 
-⚠️ Important: Some task prompts and evaluation scripts currently have OpenRouter explicitly mentioned or hardcoded (e.g., https://openrouter.ai/api/v1). If you bypass OpenRouter, you will need to adjust these references in the respective files manually.
+⚠️ Important: Some task prompts and evaluation scripts use the `OPENROUTER_API_KEY` and `OPENROUTER_BASE_URL` compatibility names. The Codex runner maps its selected provider credentials to those names inside the task container. Other harnesses may still require endpoint-specific adjustments.
 
 **1. Fill in `my_api.json` (or provide your own JSON file with the same format):**
 ```json
@@ -357,6 +357,20 @@ MY_PROXY_API_KEY=your_api_key_here
 ```bash
 python3 eval/run_batch.py --category 01_Productivity_Flow --models-config my_api.json --model my-openai-proxy/my-model
 ```
+
+For Codex, set a provider identifier, the name of the environment variable that contains its key, and the endpoint base URL. The default remains OpenRouter when these variables are unset.
+
+```bash
+export CODEX_MODEL_PROVIDER=my_proxy
+export CODEX_API_KEY_ENV=MY_PROXY_API_KEY
+export CODEX_BASE_URL=http://host.docker.internal:8000/v1
+python3 eval/run_batch.py \
+    --agent-backend codex \
+    --category 01_Productivity_Flow \
+    --model qwen2.5-coder-32b-instruct
+```
+
+Codex sends Responses API requests. Put a compatibility bridge in front of a Chat-Completions-only endpoint.
 
 <details>
 <summary>Common provider examples</summary>

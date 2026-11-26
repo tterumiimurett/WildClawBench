@@ -1,0 +1,3 @@
+# Azure Eval compatibility bridge for the Codex Responses client.
+litellm[proxy]==1.99.0
+openai==2.54.0

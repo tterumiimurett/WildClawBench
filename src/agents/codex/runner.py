@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -124,6 +125,17 @@ class CodexAgent(BaseAgent):
         self.openrouter_base_url = normalize_openrouter_base_url_for_openclaw(
             openrouter_base_url or os.environ.get("OPENROUTER_BASE_URL", "")
         )
+        self.model_provider = os.environ.get("CODEX_MODEL_PROVIDER", "openrouter").strip()
+        self.api_key_env = os.environ.get("CODEX_API_KEY_ENV", "OPENROUTER_API_KEY").strip()
+        custom_base_url = os.environ.get("CODEX_BASE_URL", "").strip()
+        if not re.fullmatch(r"[A-Za-z0-9_-]+", self.model_provider):
+            raise ValueError("CODEX_MODEL_PROVIDER contains unsupported characters")
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", self.api_key_env):
+            raise ValueError("CODEX_API_KEY_ENV is not a valid environment variable name")
+        self.model_base_url = custom_base_url.rstrip("/") or self.openrouter_base_url
+        self.model_api_key = os.environ.get(self.api_key_env, "").strip()
+        if self.model_provider == "openrouter" and not self.model_api_key:
+            self.model_api_key = self.openrouter_api_key
         self.reasoning_effort_default = reasoning_effort_default
 
     @property
@@ -184,17 +196,30 @@ class CodexAgent(BaseAgent):
                 if image_helper_enabled:
                     self._install_image_helper(task_id, spec.model)
                 snapshot_workspace_state(task_id)
-                write_execution_status(spec.output_dir, status="codex_running")
-                self._run_prompt(
-                    task_id=task_id,
-                    prompt=self._build_task_prompt(
-                        spec.prompt,
-                        image_helper_enabled=image_helper_enabled,
-                        skill_docs=skill_docs,
-                    ),
-                    timeout_seconds=spec.timeout_seconds,
-                    output_dir=spec.output_dir,
+                prompt_started = time.perf_counter()
+                write_execution_status(
+                    spec.output_dir, status="codex_running",
+                    setup_seconds=round(prompt_started - start_time, 3),
+                    prompt_started_at=_now_iso(),
                 )
+                try:
+                    self._run_prompt(
+                        task_id=task_id,
+                        prompt=self._build_task_prompt(
+                            spec.prompt,
+                            image_helper_enabled=image_helper_enabled,
+                            skill_docs=skill_docs,
+                        ),
+                        timeout_seconds=spec.timeout_seconds,
+                        output_dir=spec.output_dir,
+                    )
+                finally:
+                    write_execution_status(
+                        spec.output_dir,
+                        prompt_execution_seconds=round(time.perf_counter() - prompt_started, 3),
+                        prompt_finished_at=_now_iso(),
+                        runner_wall_seconds=round(time.perf_counter() - start_time, 3),
+                    )
                 elapsed_time = time.perf_counter() - start_time
                 write_execution_status(
                     spec.output_dir,
@@ -321,8 +346,10 @@ class CodexAgent(BaseAgent):
         proxy_https = os.environ.get("HTTPS_PROXY_INNER", "").strip()
         no_proxy = "" if not proxy_http else os.environ.get("NO_PROXY_INNER", "").strip()
         env_map: dict[str, str] = {
-            "OPENROUTER_API_KEY": self.openrouter_api_key,
-            "OPENROUTER_BASE_URL": self.openrouter_base_url,
+            self.api_key_env: self.model_api_key,
+            # Task prompts and the image helper use these compatibility names.
+            "OPENROUTER_API_KEY": self.model_api_key,
+            "OPENROUTER_BASE_URL": self.model_base_url,
             "OPENROUTER_IMAGE_MODEL": os.environ.get("OPENROUTER_IMAGE_MODEL", "").strip(),
             "WILDCLAW_IMAGE_MODEL": os.environ.get("WILDCLAW_IMAGE_MODEL", "").strip(),
             "BRAVE_API_KEY": os.environ.get("BRAVE_API_KEY", ""),
@@ -495,15 +522,17 @@ class CodexAgent(BaseAgent):
         wire_api: str | None,
     ) -> str:
         bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
-        safe_base_url = self.openrouter_base_url.replace('"', '\\"')
+        safe_base_url = self.model_base_url.replace('"', '\\"')
         reasoning_line = (
             f'model_reasoning_effort = "{reasoning_effort}"\n'
             if reasoning_effort
             else ""
         )
         provider_wire_api_line = f'wire_api = "{wire_api}"\n' if wire_api else ""
+        web_search_line = 'web_search = "disabled"\n' if os.environ.get("CODEX_DISABLE_WEB_SEARCH") == "1" else ""
         return (
-            f'model_provider = "openrouter"\n'
+            f'model_provider = "{self.model_provider}"\n'
+            f"{web_search_line}"
             f"{reasoning_line}"
             f'model_reasoning_summary = "none"\n'
             f'model_supports_reasoning_summaries = false\n'
@@ -512,20 +541,20 @@ class CodexAgent(BaseAgent):
             f'approval_policy = "never"\n'
             f'sandbox_mode = "danger-full-access"\n'
             f'\n'
-            f'[model_providers.openrouter]\n'
-            f'name = "openrouter"\n'
+            f'[model_providers.{self.model_provider}]\n'
+            f'name = "{self.model_provider}"\n'
             f'base_url = "{safe_base_url}"\n'
-            f'env_key = "OPENROUTER_API_KEY"\n'
+            f'env_key = "{self.api_key_env}"\n'
             f"{provider_wire_api_line}"
         )
 
     def _install_image_helper(self, task_id: str, model: str) -> None:
-        """Install a recoverable OpenRouter chat-completions image helper.
+        """Install a recoverable chat-completions image helper.
 
         Codex CLI image input currently goes through the Responses API, which
-        some OpenRouter models reject as a fatal process error. This helper uses
-        the benchmark's normal OpenRouter chat-completions path and reports
-        failures as JSON so the agent can continue with other methods.
+        some providers reject as a fatal process error. This helper uses the
+        configured chat-completions compatibility path and reports failures as
+        JSON so the agent can continue with other methods.
         """
         bare_model = model.split("/", 1)[1] if model.startswith("openrouter/") else model
         helper = self._render_image_helper(default_model=bare_model)
@@ -634,7 +663,7 @@ def main() -> int:
     if not allowed:
         return emit({{
             "ok": False,
-            "error": "image helper call limit reached; use previous helper observations or a direct OpenRouter chat/completions image request if needed",
+            "error": "image helper call limit reached; use previous helper observations or a direct chat/completions image request if needed",
             "call_count": call_count,
             "call_limit": CALL_LIMIT,
             "image_path": image_path,
@@ -755,7 +784,15 @@ if __name__ == "__main__":
                 text=True,
             )
             try:
-                returncode = proc.wait(timeout=timeout_seconds)
+                diagnostic_log = os.environ.get("WCB_DIAGNOSTIC_EXCLUDE_PROXY_WAIT_LOG")
+                if diagnostic_log:
+                    from src.utils.diagnostic_deadline import wait_with_proxy_excluded
+                    returncode = wait_with_proxy_excluded(
+                        proc, timeout_seconds, Path(diagnostic_log),
+                        log_path.with_name("diagnostic_timing.json"),
+                    )
+                else:
+                    returncode = proc.wait(timeout=timeout_seconds)
             except subprocess.TimeoutExpired:
                 log.write("\n" + json.dumps({
                     "timestamp": _now_iso(),
@@ -831,7 +868,7 @@ if __name__ == "__main__":
                 "## Image Helper\n\n"
                 "When image understanding is needed, use the recoverable helper "
                 "instead of Codex built-in image input. Do not call the `view_image` "
-                "tool or attach images to the model; this OpenRouter setup can fail "
+                "tool or attach images to the model; the configured provider can fail "
                 "on that path via the /responses API:\n\n"
                 '```bash\npython3 /tmp_workspace/.wildclaw_image.py "<image_path>" "<question>"\n```\n\n'
                 "The helper returns JSON and exits 0 even if the image model call "
@@ -839,7 +876,7 @@ if __name__ == "__main__":
                 "Do not call any built-in image input, `view_image`, `--image`, "
                 "`input_image`, or file:// image URLs. If the helper returns "
                 "ok=false because the model or endpoint cannot handle the request, "
-                "you may make a direct OpenRouter /chat/completions request using "
+                "you may make a direct /chat/completions request using the compatibility variables "
                 "OPENROUTER_API_KEY, OPENROUTER_BASE_URL, and an image-capable model. "
                 "Otherwise, continue with other available methods and still write the required output files. "
                 "After the required files are written, finish instead of doing "
