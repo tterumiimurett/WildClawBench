@@ -40,3 +40,26 @@ cookies.txt
 output.rar
 output_qwen.rar
 *.rar
+
+# Local prompt datasets, experiments, and validation artifacts.
+/data/colloqialized_prompt/
+/data/ToCASR/
+/data/final_dataset/
+/archive/
+/colloqialized_prompt/
+/ToCASR/
+/final_dataset/
+/to_terumi/
+/。
+/tutorial/
+/eval/experiments/
+/eval/regrade_saved_outputs.py
+/eval/results/
+/AGENTS.md
+/label_studio_setting.xml
+
+# Local source distributions and their checksums.
+/dist/
+
+# Local research and publication notes.
+/docs/grilling/

@@ -58,6 +58,16 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
         help="Path to a JSON file that will replace the top-level models field in ~/.openclaw/openclaw.json before each task",
     )
     parser.add_argument(
+        "--prompt-overrides-dir",
+        default=None,
+        help="Directory containing task-relative .md files whose content replaces each task prompt",
+    )
+    parser.add_argument(
+        "--prompt-name",
+        default=None,
+        help="User-defined prompt/experiment name included in output paths and run metadata",
+    )
+    parser.add_argument(
         "--thinking",
         default=None,
         help="Thinking/reasoning level for the model (default: high)",
