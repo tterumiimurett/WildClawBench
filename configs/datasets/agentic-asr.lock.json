@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "locked_on": "2026-09-21",
+  "purpose": "Pin the public Agentic ASR dataset consumed by this GitHub repository without duplicating dataset payloads in Git.",
+  "dataset": {
+    "repo_id": "tterumiimurett1/agentic-asr",
+    "repo_type": "dataset",
+    "visibility": "public",
+    "revision": "de19aa31572449686166680810468dea86608329",
+    "authentication": "Historical release. Hugging Face requires an approved account for downloads (automatic gating)."
+  },
+  "integrity": {
+    "remote_tree_paths": 4256,
+    "indexed_files": 4254,
+    "indexed_bytes": 4624524448,
+    "unindexed_remote_paths": [
+      ".gitattributes",
+      "metadata/files.jsonl"
+    ],
+    "files_manifest": {
+      "path": "metadata/files.jsonl",
+      "sha256": "ab6e1f176486a6134dad513ceda821f15a63bdfcf35caeb80cb645f6acff631a",
+      "rows": 4254
+    },
+    "conditions_manifest": {
+      "path": "metadata/conditions.jsonl",
+      "sha256": "211b8f0cc36a861c0594e90aadccd706fdedbb76d29bb35b9fe0e8e7ed35d4fc",
+      "rows": 48
+    },
+    "dataset_card": {
+      "path": "README.md",
+      "sha256": "8d67a7b943ec04ca60366e349b54f431214149d59813449304731aabce684301",
+      "viewer_configs": 53
+    },
+    "indexed_file_types": {
+      "mp3": 1755,
+      "wav": 2064,
+      "png": 351,
+      "json": 44,
+      "jsonl": 30,
+      "md": 10
+    }
+  },
+  "families": {
+    "osworld": {
+      "hf_root": "osworld",
+      "indexed_files": 3558,
+      "indexed_bytes": 1380484921,
+      "local_to_hf": [
+        {
+          "local": "data/ToCASR/raw_instruction",
+          "hf": "osworld/synthetic/raw_instruction",
+          "fidelity": "canonical files copied with repository-relative references"
+        },
+        {
+          "local": "data/ToCASR/colloquial_instruction",
+          "hf": "osworld/synthetic/colloquial_instruction",
+          "fidelity": "canonical files copied with repository-relative references"
+        },
+        {
+          "local": "data/ToCASR/recorded_instruction",
+          "hf": "osworld/human_recordings",
+          "fidelity": "canonical audio and ASR records copied; redundant exports and per-item transcript Markdown excluded"
+        },
+        {
+          "local": "data/ToCASR/images",
+          "hf": "osworld/task_images",
+          "fidelity": "351 task images copied"
+        },
+        {
+          "local": "data/final_dataset/dns-noise-wer10",
+          "hf": "osworld/dns_noise_wer10",
+          "fidelity": "canonical paired audio, records, reports, and selected provenance copied"
+        },
+        {
+          "local": "data/ToCASR/bias_lists/OSWorld_biasing_list.json",
+          "hf": "osworld/bias_lists/OSWorld_biasing_list.json",
+          "fidelity": "byte-identical copy"
+        }
+      ],
+      "entrypoints": {
+        "task_config": {
+          "path": "osworld/metadata/task_config.json",
+          "sha256": "c2a661a4ba68222cd27618c5e49f66ccb4e11c63044b1b716b8358554bad0e37",
+          "tasks": 351
+        },
+        "raw_instructions": {
+          "path": "osworld/synthetic/raw_instruction/instructions.jsonl",
+          "sha256": "7bd96879b6c12c81694e0613d0114b5d0a9002e2fba9d03ed479d178bdd3a086",
+          "rows": 351
+        },
+        "colloquial_instructions": {
+          "path": "osworld/synthetic/colloquial_instruction/instructions.jsonl",
+          "sha256": "a24c0b4c33fa58b9a7d49833aaf9e0dba38bcfbefb5568a2418bdfeb1bd3d595",
+          "rows": 351
+        },
+        "human_recordings": {
+          "path": "osworld/human_recordings/manifest.jsonl",
+          "sha256": "c55d84dbea3e7c5476466c3c964464abe505e160bdaa5d77eb0395ecc4c9b74a",
+          "rows": 1755,
+          "conditions": 12
+        },
+        "dns_noise_wer10": {
+          "path": "osworld/dns_noise_wer10/records.jsonl",
+          "sha256": "84a89e67078dc06e6283f13d7953348e4f5b16336690ee880b689308c3440176",
+          "rows": 351
+        },
+        "bias_list": {
+          "path": "osworld/bias_lists/OSWorld_biasing_list.json",
+          "sha256": "797ab1863b645bebca8776c5e699f600da49f9d54f402f74630239b605521d58",
+          "tasks": 351
+        }
+      }
+    },
+    "wildclawbench": {
+      "hf_root": "wildclawbench",
+      "indexed_files": 694,
+      "indexed_bytes": 3244001747,
+      "local_to_hf": [
+        {
+          "local": "data/colloqialized_prompt/tasks_clean",
+          "hf": "wildclawbench/synthetic/prompts.jsonl",
+          "field": "clean_prompt",
+          "fidelity": "60 formal tasks consolidated; task0_template excluded"
+        },
+        {
+          "local": "data/colloqialized_prompt/tasks_modified",
+          "hf": "wildclawbench/synthetic/prompts.jsonl",
+          "field": "colloquial_prompt",
+          "fidelity": "60 formal tasks consolidated; task0_template excluded"
+        },
+        {
+          "local": "data/colloqialized_prompt/tasks_tts",
+          "hf": "wildclawbench/synthetic/audio",
+          "fidelity": "60 formal task WAV files copied; task0_template excluded"
+        },
+        {
+          "local": "data/colloqialized_prompt/tasks_asr",
+          "hf": "wildclawbench/synthetic/asr",
+          "fidelity": "transcripts preserved exactly; stale audio paths rewritten to repository-relative paths"
+        },
+        {
+          "local": "data/colloqialized_prompt/human_recordings",
+          "hf": "wildclawbench/human_recordings",
+          "fidelity": "600 original recordings and four raw ASR aggregates copied byte-identically; four GPT-5.6 Luna ontology-fix aggregates added from raw ASR. Parakeet retains the unfiltered 600-file set while Qwen uses a cleaned 507-file subset"
+        },
+        {
+          "local": "data/colloqialized_prompt/bias_lists/WCB_task_details_biasing.json",
+          "hf": "wildclawbench/bias_lists/WCB_task_details_biasing.json",
+          "fidelity": "byte-identical copy"
+        }
+      ],
+      "entrypoints": {
+        "prompts": {
+          "path": "wildclawbench/synthetic/prompts.jsonl",
+          "sha256": "140d12d9c325bf941493f548ff75bd1865fbe131f16d959e72f788ef303e2966",
+          "rows": 60
+        },
+        "asr_conditions": {
+          "root": "wildclawbench/synthetic/asr",
+          "conditions": 20,
+          "rows_per_condition": 60,
+          "discovery_manifest": "metadata/conditions.jsonl"
+        },
+        "human_recordings": {
+          "path": "wildclawbench/human_recordings/asr/import_manifest.json",
+          "sha256": "494521abb4ff0e3065318e001f27f69f1e1316127cce57c3645df3e8546a8917",
+          "audio_files": 600,
+          "participants": 10,
+          "conditions": 8,
+          "parakeet_rows_per_condition": 600,
+          "qwen_rows_per_condition": 507,
+          "qwen_excluded_as_dirty_relative_to_parakeet": 93,
+          "ontology_fix": {
+            "model": "gpt-5.6-luna",
+            "path": "wildclawbench/human_recordings/asr/ontology_fix_manifest.json",
+            "sha256": "56beeef24f4c3843c3e65863264e4c9a3c502491d03282eeecffb90174051c66",
+            "prompt_path": "wildclawbench/human_recordings/asr/ontology_fix_prompt.md",
+            "prompt_sha256": "36ea5ad12ccf313be185a3cb187e63984c08b66eabf6c4ccccf6046de74dffe7",
+            "source": "all four raw ASR aggregates; prior 60-row Parakeet 01男 GPT-5.4 output not reused",
+            "parakeet_rows_per_condition": 600,
+            "qwen_rows_per_condition": 507
+          }
+        },
+        "bias_list": {
+          "path": "wildclawbench/bias_lists/WCB_task_details_biasing.json",
+          "sha256": "052d04975c5fc9cab2a569672b7f8f5ad4877d8f03c862eb78895cce491f6d6a",
+          "tasks": 60
+        }
+      }
+    }
+  },
+  "publication_contract": {
+    "canonical_payload_location": "hugging_face_only",
+    "github_contains_dataset_payload": false,
+    "archives_are_canonical": false,
+    "per_item_transcript_markdown_is_canonical": false,
+    "excluded_artifacts": [
+      "task0_template derivatives",
+      "archive files",
+      "per-item transcript Markdown",
+      "failed retry rows",
+      "runtime logs",
+      "the additional Whisper run from OSworld_ASR.zip"
+    ]
+  }
+}

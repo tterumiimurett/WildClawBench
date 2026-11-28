@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "dataset": {
+    "repo_id": "tterumiimurett1/Talk2AgentBench",
+    "repo_type": "dataset",
+    "revision": "a521bf8725f37cce415f3f20c790f471b4574fc4",
+    "access": "public, no token required"
+  },
+  "manifests": {
+    "metadata/files.jsonl": {
+      "sha256": "0d12c2ea2d345fd30cb603dbfcc78870da3ee194cc4897fd8c1f779b9869e1ff",
+      "rows": 4922
+    },
+    "metadata/conditions.jsonl": {
+      "sha256": "252391cdd7f8c92b0f765f841cfdf53ff6f00cfe27acc85c0c31a281d758890d",
+      "rows": 48
+    },
+    "wildclawbench/human_recordings/manifest.json": {
+      "sha256": "a0d5170b04e93c82190659abe567585f7f149d5abb4a8aa79d19538b53320b72",
+      "rows": 1200
+    }
+  },
+  "sources": {
+    "osworld_and_wcb_synthetic": {
+      "repo_id": "tterumiimurett1/agentic-asr",
+      "revision": "de19aa31572449686166680810468dea86608329"
+    },
+    "wcb_human_recordings": {
+      "repo_id": "tterumiimurett1/Talk2AgentBench",
+      "revision": "c761337a4ca5b5f90c0215198074ab836d1cccf8"
+    }
+  }
+}

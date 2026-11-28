@@ -174,6 +174,88 @@ def load_models_config(models_config_path: Path) -> dict:
     return parsed_models_config
 
 
+def resolve_prompt_overrides_dir(raw_path: str | None) -> Path | None:
+    if not raw_path:
+        return None
+
+    path = Path(raw_path).expanduser()
+    if not path.is_absolute():
+        path = ROOT_DIR / path
+    path = path.resolve()
+    if not path.is_dir():
+        raise ValueError(f"Prompt overrides directory not found: {path}")
+    return path
+
+
+def normalize_prompt_name(raw_name: str | None) -> str | None:
+    if raw_name is None:
+        return None
+
+    name = raw_name.strip()
+    if not name:
+        raise ValueError("--prompt-name must not be empty")
+
+    safe_name = re.sub(r"[^a-zA-Z0-9._-]", "_", name).strip("._-")
+    if not safe_name:
+        raise ValueError("--prompt-name must contain at least one letter or number")
+    return safe_name
+
+
+def apply_prompt_override(task: dict, task_file: Path, overrides_dir: Path | None) -> dict:
+    resolved_task_file = task_file.resolve()
+    task["task_file"] = str(resolved_task_file)
+    task["prompt_file"] = str(resolved_task_file)
+    if overrides_dir is None:
+        return task
+
+    try:
+        relative_path = resolved_task_file.relative_to(TASKS_DIR.resolve())
+    except ValueError as exc:
+        raise ValueError(
+            f"Task file is not under TASKS_DIR and cannot be mapped to prompt override: {resolved_task_file}"
+        ) from exc
+
+    override_file = overrides_dir / relative_path
+    if not override_file.is_file():
+        raise ValueError(f"Prompt override file not found: {override_file}")
+
+    prompt = override_file.read_text(encoding="utf-8").strip()
+    if not prompt:
+        raise ValueError(f"Prompt override file is empty: {override_file}")
+
+    task["prompt"] = prompt
+    task["prompt_override_file"] = str(override_file)
+    task["prompt_file"] = str(override_file)
+    task["prompt_overrides_dir"] = str(overrides_dir)
+    return task
+
+
+def write_run_metadata(
+    output_dir: Path,
+    *,
+    task: dict,
+    model: str,
+    prompt_name: str | None,
+    started_at: datetime,
+    run_id: str,
+) -> None:
+    metadata = {
+        "task_id": task["task_id"],
+        "category": task["category"],
+        "model": model,
+        "prompt_name": prompt_name,
+        "prompt_path": task.get("prompt_file"),
+        "prompt_overrides_dir": task.get("prompt_overrides_dir"),
+        "base_task_path": task.get("task_file"),
+        "started_at": started_at.astimezone().isoformat(),
+        "run_id": run_id,
+    }
+    metadata_path = output_dir / "run_metadata.json"
+    metadata_path.write_text(
+        json.dumps(metadata, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+
+
 def run_single_task(
     task: dict,
     model: str,
@@ -182,6 +264,7 @@ def run_single_task(
     lobster: dict | None = None,
     thinking: str | None = None,
     models_config: dict | None = None,
+    prompt_name: str | None = None,
 ) -> dict:
     """
     Execute a single task, returning a {"task_id", "scores", "error"} dict.
@@ -196,17 +279,27 @@ def run_single_task(
     system_prompt = f"You are an expert in a restricted, non-interactive environment. Solve the task efficiently before the timeout ({timeout_seconds}s). Run all processes in the foreground without user input or background services. Provide a complete, functional solution in a single pass with no placeholders. \n"
     prompt = system_prompt + prompt
 
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+    started_at = datetime.now().astimezone()
+    timestamp = started_at.strftime("%Y%m%d_%H%M")
     run_id = uuid.uuid4().hex[:6]
     _m = re.match(r"(\d+)_.*?(task_\d+)", task_id_ori)
     short_task_id = f"{_m.group(1)}_{_m.group(2)}" if _m else task_id_ori
     short_model = re.sub(r'[^a-zA-Z0-9.\-_]', '_', model.rsplit('/', 1)[-1])
     lobster_prefix = f"{lobster['name']}_" if lobster else ""
-    suffix = f"{lobster_prefix}{short_model}_{timestamp}_{run_id}"
-    task_id = f"{short_task_id}_{lobster_prefix}{short_model}_{timestamp}_{run_id}"
+    prompt_suffix = f"_{prompt_name}" if prompt_name else ""
+    suffix = f"{lobster_prefix}{short_model}{prompt_suffix}_{timestamp}_{run_id}"
+    task_id = f"{short_task_id}_{lobster_prefix}{short_model}{prompt_suffix}_{timestamp}_{run_id}"
 
     output_dir = output_root / task["category"] / f"{task_id_ori}" / f"{suffix}"
     output_dir.mkdir(parents=True, exist_ok=True)
+    write_run_metadata(
+        output_dir,
+        task=task,
+        model=model,
+        prompt_name=prompt_name,
+        started_at=started_at,
+        run_id=run_id,
+    )
 
     result = {"task_id": task_id, "scores": {}, "error": None}
 
@@ -308,6 +401,13 @@ def main() -> None:
         default_model=DEFAULT_MODEL,
         default_parallel=DEFAULT_PARALLEL,
     )
+    try:
+        prompt_name = normalize_prompt_name(args.prompt_name)
+    except ValueError as exc:
+        logger.error("%s", exc)
+        sys.exit(1)
+    if prompt_name is not None:
+        logger.info("Prompt/experiment name: %s", prompt_name)
     if args.agent_backend == "claudecode":
         backend: BaseAgent = ClaudeCodeAgent(
             anthropic_api_key=OPENROUTER_API_KEY,
@@ -341,6 +441,14 @@ def main() -> None:
             logger.error("Invalid models config: %s", exc)
             sys.exit(1)
 
+    try:
+        prompt_overrides_dir = resolve_prompt_overrides_dir(args.prompt_overrides_dir)
+    except ValueError as exc:
+        logger.error("%s", exc)
+        sys.exit(1)
+    if prompt_overrides_dir is not None:
+        logger.info("Prompt overrides enabled: %s", prompt_overrides_dir)
+
     lobster = None
     if args.lobster_workspace:
         if not args.lobster_name:
@@ -364,7 +472,15 @@ def main() -> None:
         if not task_file.exists():
             logger.error("File not found: %s", task_file)
             sys.exit(1)
-        task = parse_task_md(task_file)
+        try:
+            task = apply_prompt_override(
+                parse_task_md(task_file),
+                task_file,
+                prompt_overrides_dir,
+            )
+        except Exception as exc:
+            logger.error("Parse failed %s: %s", task_file, exc)
+            sys.exit(1)
         logger.info("Single task mode: %s", task["task_id"])
         result = run_single_task(
             task,
@@ -374,6 +490,7 @@ def main() -> None:
             lobster=lobster,
             models_config=models_config,
             thinking=args.thinking,
+            prompt_name=prompt_name,
         )
         if result.get("error") or (result.get("scores") or {}).get("error"):
             sys.exit(1)
@@ -403,7 +520,13 @@ def main() -> None:
         tasks = []
         for tf in task_files:
             try:
-                tasks.append(parse_task_md(tf))
+                tasks.append(
+                    apply_prompt_override(
+                        parse_task_md(tf),
+                        tf,
+                        prompt_overrides_dir,
+                    )
+                )
             except Exception as exc:
                 logger.error("Parse failed %s: %s", tf, exc)
 
@@ -422,6 +545,7 @@ def main() -> None:
                         lobster=lobster,
                         models_config=models_config,
                         thinking=args.thinking,
+                        prompt_name=prompt_name,
                     )
                 )
         else:
@@ -436,6 +560,7 @@ def main() -> None:
                         lobster,
                         args.thinking,
                         models_config,
+                        prompt_name,
                     ): task["task_id"]
                     for task in tasks
                 }
@@ -448,11 +573,15 @@ def main() -> None:
                         results.append({"task_id": tid, "scores": {}, "error": str(exc)})
 
         summary_label = f"{lobster['name']}_{safe_model_name}" if lobster else safe_model_name
+        if prompt_name:
+            summary_label = f"{summary_label}_{prompt_name}"
         print_summary(results, category, output_root, summary_label)
         all_results.extend(results)
 
     if len(categories) > 1 and all_results:
         summary_label = f"{lobster['name']}_{safe_model_name}" if lobster else safe_model_name
+        if prompt_name:
+            summary_label = f"{summary_label}_{prompt_name}"
         print_global_summary(all_results, output_root, summary_label)
 
 if __name__ == "__main__":
