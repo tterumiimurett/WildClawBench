@@ -1,6 +1,10 @@
 # WCB 与 OSWorld 数据
 
-音频、指令、ASR 转写和文件校验值统一发布在 [Talk2AgentBench 固定版本](https://huggingface.co/datasets/tterumiimurett1/Talk2AgentBench/tree/1cb00a7584960c45017dbcaa17a925db0ddbfe0d)，可直接下载。[数据锁](../configs/datasets/talk2agentbench.lock.json)记录版本与清单 SHA-256。
+音频、指令、ASR 转写和文件校验值统一发布在 [Talk2AgentBench 固定版本](https://huggingface.co/datasets/tterumiimurett1/Talk2AgentBench/tree/a521bf8725f37cce415f3f20c790f471b4574fc4)，可直接下载。[数据锁](../configs/datasets/talk2agentbench.lock.json)记录版本与清单 SHA-256。
+
+**WildClawBench（WCB）** 收录 60 个中英文命令行智能体任务，例如整理报告和检索信息。原始采集中，每个任务由 10 位熟悉中英文的读者分别朗读。当前版本按每个任务 10 个读者编号组织，补录时同一编号可能换人。8 个涉及 URL 的任务各录了指定读法和自由读法，其余 52 个任务的两个版本共用同一份录音。
+
+**OSWorld** 收录 351 个英文图形桌面任务，例如编辑文档、填写电子表格。整套采集共有 98 位参与者，每个任务有 5 份真人录音，共 1,755 条。清单按任务和录音序号标识每条音频。[采集说明，论文 §3.1](https://arxiv.org/html/2609.38867v1#S3.SS1)
 
 | 基准 | HF 目录 | 覆盖范围 |
 |---|---|---|
@@ -10,7 +14,7 @@
 | WCB 真人 | `wildclawbench/human_recordings/` | 60 个任务 × 10 个读者槽位 × 2 种 URL 读法，共 1,200 条。8 个 ASR 条件各覆盖 194 条 |
 | WCB TTS | `wildclawbench/synthetic/` | 60 个任务，20 个 ASR 条件均覆盖全部任务 |
 
-WCB 真人录音的清单以 `(speaker, task, version)` 标识样本，`file` 相对于 `wildclawbench/human_recordings/`。1,200 条记录对应 680 份不同音频，84 条记录标有局部合成修补区间。转写按音频哈希、任务与读者槽位从历史结果匹配。每个条件中其余 1,006 条尚无转写。
+WCB 真人录音的清单以 `(speaker, task, version)` 标识样本，`file` 相对于 `wildclawbench/human_recordings/`。1,200 条记录对应 680 份不同音频，84 条记录标有局部合成修补区间。转写按音频哈希、任务与读者槽位从历史结果匹配。
 
 ## 历史实验
 

@@ -3,12 +3,12 @@
   "dataset": {
     "repo_id": "tterumiimurett1/Talk2AgentBench",
     "repo_type": "dataset",
-    "revision": "1cb00a7584960c45017dbcaa17a925db0ddbfe0d",
+    "revision": "a521bf8725f37cce415f3f20c790f471b4574fc4",
     "access": "public, no token required"
   },
   "manifests": {
     "metadata/files.jsonl": {
-      "sha256": "3a31c788618e9e190b030c913c6c7abfead8d820966c0f2ad24281126fcee70d",
+      "sha256": "0d12c2ea2d345fd30cb603dbfcc78870da3ee194cc4897fd8c1f779b9869e1ff",
       "rows": 4922
     },
     "metadata/conditions.jsonl": {

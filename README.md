@@ -27,6 +27,10 @@ The command sends the texts to OpenRouter and writes one JSON line per pair to s
 
 The default judge is `openai/gpt-5.4-mini`. Use `--model` to select an OpenRouter model that supports JSON output. All judging stages use that model. Use `--output` to choose where detailed judgments and cached calls are saved (default `output/intent-retention/`). Save the printed JSONL by redirecting standard output to a file.
 
+## Spoken task data
+
+Talk2AgentBench includes spoken instructions from two benchmarks. WildClawBench (WCB) covers 60 English and Chinese command-line tasks. The original collection used ten bilingual readers per task. OSWorld covers 351 English desktop tasks, with five human recordings per task from a pool of 98 participants. Both collections also include text-to-speech audio. [Recordings and transcripts](https://huggingface.co/datasets/tterumiimurett1/Talk2AgentBench) · [Recording protocol](https://arxiv.org/html/2609.38867v1#S3.SS1)
+
 ## Explore the repository
 
 | To | Open |
