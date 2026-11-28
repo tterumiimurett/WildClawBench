@@ -7,7 +7,7 @@
     "repo_type": "dataset",
     "visibility": "public",
     "revision": "de19aa31572449686166680810468dea86608329",
-    "authentication": "No token is required for read access. Write credentials must remain out of band."
+    "authentication": "Historical release. Hugging Face requires an approved account for downloads (automatic gating)."
   },
   "integrity": {
     "remote_tree_paths": 4256,

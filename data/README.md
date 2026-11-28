@@ -1,25 +1,20 @@
-# WCB 与 OSWorld 数据目录
+# WCB 与 OSWorld 数据
 
-复现实验使用 Hugging Face 上的 [Agentic ASR 固定版本](https://huggingface.co/datasets/tterumiimurett1/agentic-asr/tree/de19aa31572449686166680810468dea86608329)。[数据锁](../configs/datasets/agentic-asr.lock.json)记录了本地路径、远端路径、转写条件和文件清单校验值。下表按**音频是怎么产生的**区分数据；ASR 转写是对相应音频的识别结果。
+音频、指令、ASR 转写和文件校验值统一发布在 [Talk2AgentBench 固定版本](https://huggingface.co/datasets/tterumiimurett1/Talk2AgentBench/tree/1cb00a7584960c45017dbcaa17a925db0ddbfe0d)，可直接下载。[数据锁](../configs/datasets/talk2agentbench.lock.json)记录版本与清单 SHA-256。
 
-## 找数据
+| 基准 | HF 目录 | 覆盖范围 |
+|---|---|---|
+| OSWorld 真人 | `osworld/human_recordings/` | 351 个任务，每个 5 条录音，共 1,755 条。12 个 ASR 条件均覆盖全部录音 |
+| OSWorld 原始／口语指令 TTS | `osworld/synthetic/` | 两种指令各 351 条音频，各有 4 个完整 ASR 条件 |
+| OSWorld 加噪 | `osworld/dns_noise_wer10/` | 351 对原始／口语音频，共 702 条 |
+| WCB 真人 | `wildclawbench/human_recordings/` | 60 个任务 × 10 个读者槽位 × 2 种 URL 读法，共 1,200 条。8 个 ASR 条件各覆盖 194 条 |
+| WCB TTS | `wildclawbench/synthetic/` | 60 个任务，20 个 ASR 条件均覆盖全部任务 |
 
-本地路径均相对于当前仓库根目录。数量核对自本机音频文件及固定版本的 HF 文件列表，单位是音频文件数。
+WCB 真人录音的清单以 `(speaker, task, version)` 标识样本，`file` 相对于 `wildclawbench/human_recordings/`。1,200 条记录对应 680 份不同音频，84 条记录标有局部合成修补区间。转写按音频哈希、任务与读者槽位从历史结果匹配。每个条件中其余 1,006 条尚无转写。
 
-| 基准与来源 | 当前本地位置 | HF 目录 | 内容 |
-|---|---|---|---|
-| WCB · TTS | `data/colloqialized_prompt/tasks_tts/` | `wildclawbench/synthetic/` | 60 条正式任务音频，转写在本地同级 `tasks_asr/`。本机另有 1 条模板音频 |
-| WCB · 真人朗读 | `data/colloqialized_prompt/human_recordings/` | `wildclawbench/human_recordings/` | 10 位参与者，600 条录音。按数据锁，Parakeet 每个条件有 600 条结果，Qwen 使用清洗后的 507 条 |
-| OSWorld · 原始指令 TTS | `data/ToCASR/raw_instruction/` | `osworld/synthetic/raw_instruction/` | 351 条 WAV，配有参考指令和转写 |
-| OSWorld · 口语指令 TTS | `data/ToCASR/colloquial_instruction/` | `osworld/synthetic/colloquial_instruction/` | 351 条 WAV，与原始指令按任务配对 |
-| OSWorld · 真人朗读 | `data/ToCASR/recorded_instruction/` | `osworld/human_recordings/` | 351 个任务，每个 5 条录音，共 1,755 条 MP3 |
-| OSWorld · 加噪实验 | `data/final_dataset/dns-noise-wer10/` | `osworld/dns_noise_wer10/` | 351 对原始／口语音频，共 702 条 WAV，附实验清单、评估与来源记录 |
+## 历史实验
 
-任务图像和识别偏置词表也有独立映射，见数据锁中的 `local_to_hf`。要按识别模型或条件选转写，可查固定版本中的 `metadata/conditions.jsonl`。
-
-## TODO（仓库整理完成后）
-
-- [ ] 用 Hugging Face 数据集 `tterumiimurett1/Talk2AgentBench` 中的 WCB 数据，完整替换 `tterumiimurett1/agentic-asr` 中的 WCB 真人录音数据（`wildclawbench/human_recordings/`）。
+已有实验使用 [agentic-asr 固定版本](https://huggingface.co/datasets/tterumiimurett1/agentic-asr/tree/de19aa31572449686166680810468dea86608329)。[历史数据锁](../configs/datasets/agentic-asr.lock.json)记录原始输入和转写条件。该版本的 WCB 真人集有 600 条录音，Parakeet 每个条件覆盖 600 条，Qwen 每个条件覆盖 507 条。[实验指南](../experiments/README.md)说明如何用保存的分数复算主表。
 
 ## 本地目录布局
 
